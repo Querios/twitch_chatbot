@@ -2,8 +2,6 @@ require('dotenv').config();
 
 const tmi = require('tmi.js');
 
-const regexpCommand = new RegExp(/^!([a-zA-Z0-9]+)(?:\W+)?(.*)?/);
-
 const commands = {
     welcome: {
         response: (userName) => `Welcome to the stream of salt ${userName}!`
@@ -40,35 +38,33 @@ const client = new tmi.Client({
 client.connect();
 
 client.on("join", (channel, username, self) => {
-    const isBotOrOwner = tags.username.toLowerCase() === process.env.TWITCH_BOT_USERNAM ||
-                        tags.username.toLowerCase() === process.env.TWITCH_OWNER_USERNAME;
+    const isBotOrOwner = username.toLowerCase() === process.env.TWITCH_BOT_USERNAM ||
+                        self;
 
     if(isBotOrOwner) return;
 
-    client.say(channel, commands[welcome(username)]);
+    client.say(channel, commands.welcome.response(username));
 });
 
 client.on("part", (channel, username, self) => {
-    const isBotOrOwner = tags.username.toLowerCase() === process.env.TWITCH_BOT_USERNAM ||
-                        tags.username.toLowerCase() === process.env.TWITCH_OWNER_USERNAME;
+    const isBotOrOwner = username.toLowerCase() === process.env.TWITCH_BOT_USERNAM ||
+                        self;
 
     if(isBotOrOwner) return;
 
-    client.say(channel, commands[seeUserOff(username)]);
+    client.say(channel, commands.welcome.response(username));
 });
 
 client.on('message', (channel, tags, message, self) => {
-    const isBotOrOwner = tags.username.toLowerCase() === process.env.TWITCH_BOT_USERNAM ||
-                        tags.username.toLowerCase() === process.env.TWITCH_OWNER_USERNAME;
+    if(!message.startsWith('!')) return;
+    
+    const args = message.slice(1).split(' ');
+	const command = args.shift().toLowerCase();
 
-    if(isBotOrOwner) return;
-
-    const [raw, command, argument] = message.match(regexpCommand);
-
-    const { response } = commands[command] || {};
+    const { response } = commands[messageCommands[command]] || {};
     
     if ( typeof response === 'function' ) {
-        client.say(channel, response(argument));
+        client.say(channel, response(args.join(' ')));
     } else if ( typeof response === 'string' ) {
         client.say(channel, response);
     }
