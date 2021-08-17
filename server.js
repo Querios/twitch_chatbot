@@ -70,6 +70,7 @@ client.on('message', (channel, tags, message, self) => {
     } else if ( typeof response === 'string' ) {
         client.say(channel, response);
     }
+    
     */
     
 });
