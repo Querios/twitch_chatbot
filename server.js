@@ -11,7 +11,7 @@ const commands = {
     },
     messageCommands: {
         echo: {
-            response: (msg) => $(msg)
+            response: (msg) => `${msg}`
         }
     }
     /*
@@ -38,8 +38,8 @@ const client = new tmi.Client({
 client.connect();
 
 client.on("join", (channel, username, self) => {
-    const isBotOrOwner = username.toLowerCase() === process.env.TWITCH_BOT_USERNAM ||
-                        self;
+    const isBotOrOwner = username.toLowerCase() === process.env.TWITCH_BOT_USERNAME ||
+                        username.toLowerCase() === process.env.TWITCH_OWNER_USERNAME;
 
     if(isBotOrOwner) return;
 
@@ -47,8 +47,8 @@ client.on("join", (channel, username, self) => {
 });
 
 client.on("part", (channel, username, self) => {
-    const isBotOrOwner = username.toLowerCase() === process.env.TWITCH_BOT_USERNAM ||
-                        self;
+    const isBotOrOwner = username.toLowerCase() === process.env.TWITCH_BOT_USERNAME ||
+                        username.toLowerCase() === process.env.TWITCH_OWNER_USERNAME;
 
     if(isBotOrOwner) return;
 
@@ -61,7 +61,8 @@ client.on('message', (channel, tags, message, self) => {
     const args = message.slice(1).split(' ');
 	const command = args.shift().toLowerCase();
 
-    const { response } = commands[messageCommands[command]] || {};
+    const messageCommands = commands['messageCommands'];
+    const { response } = messageCommands[command] || {};
     
     if ( typeof response === 'function' ) {
         client.say(channel, response(args.join(' ')));
