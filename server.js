@@ -12,6 +12,12 @@ const commands = {
     messageCommands: {
         echo: {
             response: (msg) => `${msg}`
+        },
+        ban: {
+            response: (channel, userName, reason) => client.ban(channel, userName, reason)
+        },
+        unban: {
+            response: (channel, userName) => client.unban(channel, userName)
         }
     }
     /*
@@ -52,11 +58,14 @@ client.on("part", (channel, username, self) => {
 
     if(isBotOrOwner) return;
 
-    client.say(channel, commands.welcome.response(username));
+    client.say(channel, commands.seeUserOff.response(username));
 });
 
 client.on('message', (channel, tags, message, self) => {
     if(!message.startsWith('!')) return;
+
+    const isBotOrOwner = username.toLowerCase() === process.env.TWITCH_BOT_USERNAME ||
+                        username.toLowerCase() === process.env.TWITCH_OWNER_USERNAME;
     
     const args = message.slice(1).split(' ');
 	const command = args.shift().toLowerCase();
@@ -64,9 +73,22 @@ client.on('message', (channel, tags, message, self) => {
     const messageCommands = commands['messageCommands'];
     const { response } = messageCommands[command] || {};
     
+    if(isBotOrOwner){
+        if(command ==='ban') {
+            response(channel, username, args.join(' '));
+            return;
+        }
+        else if(command ==='unban') {
+            response(channel, username);
+            return;
+        }       
+    }
+    
+    
     if ( typeof response === 'function' ) {
         client.say(channel, response(args.join(' ')));
-    } else if ( typeof response === 'string' ) {
+    }
+    else if ( typeof response === 'string' ) {
         client.say(channel, response);
     }
     
